@@ -1,5 +1,5 @@
-import axios, { AxiosError, CanceledError } from "axios";
 import { useEffect, useState } from "react";
+import apiClient, { AxiosError, CanceledError } from "../services/api-client";
 
 interface User {
   id: number;
@@ -16,12 +16,9 @@ const UserList = () => {
     const fetchUsers = async () => {
       try {
         setLoading(true);
-        const res = await axios.get<User[]>(
-          "https://jsonplaceholder.typicode.com/users",
-          {
-            signal: controller.signal,
-          }
-        );
+        const res = await apiClient.get<User[]>("/users", {
+          signal: controller.signal,
+        });
         setUsers(res.data);
         setLoading(false);
       } catch (err) {
@@ -37,20 +34,18 @@ const UserList = () => {
   const deleteUser = (user: User) => {
     const originalUsers = [...users];
     setUsers(users.filter((u) => u.id !== user.id));
-    axios
-      .delete("https://jsonplaceholder.typicode.com/users/" + user.id)
-      .catch((err) => {
-        setError(err.message);
-        setUsers(originalUsers);
-      });
+    apiClient.delete("/users/" + user.id).catch((err) => {
+      setError(err.message);
+      setUsers(originalUsers);
+    });
   };
 
   const addUser = () => {
     const originalUsers = [...users];
     const newUser = { id: 0, name: "Damilola" };
     setUsers([newUser, ...users]);
-    axios
-      .post("https://jsonplaceholder.typicode.com/users", newUser)
+    apiClient
+      .post("/users", newUser)
       .then(({ data: savedUser }) => setUsers([savedUser, ...users]))
       .catch((err) => {
         setError(err.message);
@@ -62,12 +57,10 @@ const UserList = () => {
     const originalUsers = [...users];
     const updatedUser = { ...user, name: user.name + "!" };
     setUsers(users.map((u) => (u.id === user.id ? updatedUser : u)));
-    axios
-      .put("https://jsonplaceholder.typicode.com/users/" + user.id, updateUser)
-      .catch((err) => {
-        setError(err.message);
-        setUsers(originalUsers);
-      });
+    apiClient.put("/users/" + user.id, updateUser).catch((err) => {
+      setError(err.message);
+      setUsers(originalUsers);
+    });
   };
 
   if (isLoading) return <div className="spinner-border"></div>;
